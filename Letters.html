@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Open When Letters</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Lato:wght@300;400&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --cream:#faf9f6;--ink:#2c2824;--muted:#8a847c;
+  --warm:#f5ede4;--warm-border:#e8d8cc;
+  --card:#fff;--border:#e8e2dc;--divider:#ede7e0;
+  --form-border:#d5cdc6;
+  --rose-pink:#d4607a;--sun-gold:#e8a020;--gerb-coral:#e85a38;
+}
+body{font-family:'Lato',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;overflow-x:hidden}
+.app{max-width:960px;margin:0 auto;padding:2.5rem 1.5rem 5rem}
+
+/* Hero */
+.hero{text-align:center;margin-bottom:2.75rem}
+.hero-badge{display:inline-block;font-size:12px;color:#9a7060;background:var(--warm);border:0.5px solid var(--warm-border);border-radius:20px;padding:5px 18px;margin-bottom:.85rem;letter-spacing:.05em;cursor:pointer;transition:background .15s}
+.hero-badge:hover{background:#eeddd6}
+.hero h1{font-family:'Playfair Display',serif;font-size:34px;font-weight:400;margin-bottom:8px;letter-spacing:.01em}
+.hero p{font-size:15px;color:var(--muted);line-height:1.6}
+.hero-actions{display:flex;gap:10px;justify-content:center;margin-top:1.5rem;flex-wrap:wrap}
+
+/* Buttons */
+.btn{font-family:'Lato',sans-serif;font-size:13px;padding:8px 20px;border-radius:20px;cursor:pointer;border:0.5px solid;transition:all .15s;letter-spacing:.02em}
+.btn-outline{background:transparent;border-color:#c4b4a8;color:#6b5a50}
+.btn-outline:hover{background:var(--warm)}
+.btn-primary{background:#c4b4a8;border-color:#c4b4a8;color:#fff}
+.btn-primary:hover{background:#b4a498;border-color:#b4a498}
+.btn-bloom{background:linear-gradient(135deg,#d4607a,#e8a020);border:none;color:#fff;font-size:13px;padding:9px 22px;border-radius:20px;cursor:pointer;transition:opacity .15s;letter-spacing:.03em;font-family:'Lato',sans-serif}
+.btn-bloom:hover{opacity:.88}
+.btn-danger{background:transparent;border-color:#e8a0a0;color:#b06060;font-family:'Lato',sans-serif;font-size:13px;padding:7px 16px;border-radius:20px;cursor:pointer;border:0.5px solid;transition:background .15s}
+.btn-danger:hover{background:#fdf0f0}
+
+.section-label{font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:1rem;font-family:'Lato',sans-serif}
+
+/* Builder Panel */
+.builder-panel{background:var(--card);border:0.5px solid var(--border);border-radius:16px;padding:1.75rem;margin-bottom:2.25rem}
+.builder-inner{display:grid;grid-template-columns:1fr 1fr;gap:2rem}
+@media(max-width:580px){.builder-inner{grid-template-columns:1fr}}
+.flower-palette{display:flex;flex-direction:column;gap:.75rem}
+.flower-option{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;border:1.5px solid transparent;cursor:default;background:var(--cream);transition:all .18s;user-select:none}
+.flower-option.has-qty{border-color:currentColor;background:#fff}
+.flower-name{font-size:14px;font-family:'Playfair Display',serif;font-style:italic}
+.flower-hint{font-size:11px;color:var(--muted);margin-top:1px}
+.qty-row{display:flex;align-items:center;gap:8px;margin-left:auto;flex-shrink:0}
+.qty-btn{width:24px;height:24px;border-radius:50%;border:0.5px solid var(--border);background:#fff;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--ink);transition:background .12s;line-height:1}
+.qty-btn:hover{background:var(--warm)}
+.qty-num{font-size:14px;min-width:18px;text-align:center;color:var(--ink)}
+.bouquet-preview-area{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:220px;gap:.75rem}
+.bouquet-canvas{position:relative;width:210px;height:200px;display:flex;align-items:flex-end;justify-content:center}
+.bouquet-empty{color:var(--muted);font-size:13px;text-align:center;line-height:1.7}
+.bouquet-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.pin-hint{font-size:12px;color:#9a7060;text-align:center;margin-top:.25rem;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* Grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:1.25rem}
+.env-card{border-radius:14px;border:1.5px solid var(--border);background:var(--card);padding:1.5rem 1rem 1.3rem;display:flex;flex-direction:column;align-items:center;gap:11px;transition:transform .18s,border-color .18s,box-shadow .18s;position:relative;cursor:pointer;user-select:none;overflow:hidden}
+.env-card:hover{transform:translateY(-2px);border-color:#c4b4a8}
+.env-card.locked{opacity:.58;cursor:not-allowed}
+.env-card.locked:hover{transform:none;border-color:var(--border)}
+.env-card.pin-target{cursor:crosshair;border-style:dashed}
+.env-card.pin-target:hover{border-color:var(--rose-pink);background:#fff8fa;box-shadow:0 0 0 3px #d4607a22}
+.env-card.has-bouquet{border-color:#c8a0b0}
+.bouquet-badge{position:absolute;top:6px;right:6px;width:24px;height:24px}
+.lock-icon{position:absolute;top:10px;right:10px}
+.env-icon{width:58px;height:44px;position:relative;flex-shrink:0}
+.env-body{width:58px;height:44px;border-radius:4px;border:1.5px solid currentColor;position:absolute;inset:0}
+.env-flap{width:0;height:0;border-left:29px solid transparent;border-right:29px solid transparent;border-top:22px solid currentColor;position:absolute;top:0;left:0;opacity:.48;transition:transform .32s ease;transform-origin:top center}
+.env-card:not(.locked):hover .env-flap{transform:rotateX(28deg) translateY(-5px)}
+.env-vl{width:0;height:0;border-left:29px solid transparent;border-bottom:22px solid currentColor;position:absolute;bottom:0;left:0;opacity:.14}
+.env-vr{width:0;height:0;border-right:29px solid transparent;border-bottom:22px solid currentColor;position:absolute;bottom:0;right:0;opacity:.14}
+.env-label{font-size:12.5px;color:var(--ink);text-align:center;line-height:1.45;font-family:'Playfair Display',serif;font-style:italic}
+.env-dot{width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.28;position:absolute;bottom:12px;left:50%;transform:translateX(-50%)}
+
+.c-pink{color:#b87a8a}.bg-pink{background:#fdf5f7}
+.c-amber{color:#a07035}.bg-amber{background:#fdf8f0}
+.c-teal{color:#3a8f7a}.bg-teal{background:#f0faf6}
+.c-blue{color:#4a7faa}.bg-blue{background:#f0f6fc}
+.c-purple{color:#7a6abd}.bg-purple{background:#f4f2fd}
+.c-rose{color:#b06070}.bg-rose{background:#fdf0f2}
+
+/* Overlay & Modals */
+.overlay{position:fixed;inset:0;background:rgba(44,44,40,.42);display:flex;align-items:center;justify-content:center;z-index:300;padding:1.25rem}
+.letter-modal{background:var(--card);border-radius:18px;border:0.5px solid var(--border);width:100%;max-width:560px;max-height:92vh;overflow-y:auto;position:relative;animation:modalIn .32s cubic-bezier(.34,1.5,.64,1) forwards}
+.add-modal{background:var(--card);border-radius:18px;border:0.5px solid var(--border);width:100%;max-width:500px;max-height:90vh;overflow-y:auto;padding:1.75rem;animation:modalIn .28s cubic-bezier(.34,1.5,.64,1) forwards}
+.name-modal-inner{background:var(--card);border-radius:18px;border:0.5px solid var(--border);width:100%;max-width:400px;padding:2.25rem 2rem;text-align:center;animation:modalIn .28s cubic-bezier(.34,1.5,.64,1) forwards}
+@keyframes modalIn{from{opacity:0;transform:scale(.93) translateY(14px)}to{opacity:1;transform:scale(1) translateY(0)}}
+
+.bouquet-reveal{overflow:hidden;display:flex;justify-content:center;align-items:flex-end;padding:1.5rem 0 0;height:0;opacity:0;background:linear-gradient(to bottom,#fdf5f7,#fff8fa);border-radius:18px 18px 0 0;transition:height .7s cubic-bezier(.34,1.2,.64,1),opacity .5s ease}
+.bouquet-reveal.bloomed{height:200px;opacity:1}
+
+.letter-content{padding:2rem 2rem 1.75rem}
+.modal-tag{font-size:10px;color:#a09488;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+.modal-title{font-size:22px;font-family:'Playfair Display',serif;font-weight:400;color:var(--ink);line-height:1.3;margin-bottom:1.25rem}
+.modal-close{position:absolute;top:14px;right:14px;background:#fff;border:0.5px solid var(--border);border-radius:20px;padding:5px 16px;cursor:pointer;font-size:12px;color:var(--muted);font-family:'Lato',sans-serif;transition:background .15s;z-index:2}
+.modal-close:hover{background:var(--warm)}
+.divider{height:.5px;background:var(--divider);margin:0 0 1.25rem}
+.letter-salutation{font-size:15px;color:#6b5a52;margin-bottom:10px;font-family:'Playfair Display',serif;font-style:italic}
+.letter-body{font-size:15px;color:#4a4845;line-height:1.85;white-space:pre-wrap;font-family:'Playfair Display',serif}
+.letter-sign{margin-top:1.75rem;font-size:14px;color:#8a7060;font-style:italic;font-family:'Playfair Display',serif}
+.media-box{margin-top:1.25rem;border-radius:10px;border:0.5px solid var(--border);background:#faf8f5;padding:12px 14px;display:flex;align-items:center;gap:12px}
+.media-kind{font-size:10px;color:#a09488;letter-spacing:.07em;text-transform:uppercase}
+.media-name{font-size:13px;color:var(--ink);font-weight:500;margin-top:2px}
+
+/* Form */
+.form-group-stack{display:flex;flex-direction:column;gap:14px}
+.form-label{font-size:11px;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-bottom:5px;display:block;font-family:'Lato',sans-serif}
+.form-input{width:100%;font-size:14px;font-family:'Playfair Display',serif;color:var(--ink);background:#fff;border:0.5px solid var(--form-border);border-radius:8px;padding:10px 13px;outline:none;transition:border-color .15s}
+.form-input:focus{border-color:#b8a09088}
+.form-textarea{min-height:120px;resize:vertical;line-height:1.7}
+.color-picker{display:flex;gap:9px;flex-wrap:wrap}
+.color-dot{width:28px;height:28px;border-radius:50%;cursor:pointer;border:2.5px solid transparent;transition:transform .14s,border-color .14s}
+.color-dot.active{border-color:var(--ink);transform:scale(1.18)}
+.color-dot:hover{transform:scale(1.1)}
+.lock-row{display:flex;align-items:center;gap:12px}
+.toggle{width:40px;height:22px;background:var(--form-border);border-radius:11px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+.toggle.on{background:#b8a69c}
+.toggle-thumb{width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.toggle.on .toggle-thumb{left:20px}
+
+/* Scrollbar */
+.letter-modal::-webkit-scrollbar,.add-modal::-webkit-scrollbar{width:4px}
+.letter-modal::-webkit-scrollbar-thumb,.add-modal::-webkit-scrollbar-thumb{background:var(--divider);border-radius:4px}
+
+@keyframes bloomIn{from{transform:scale(0) translateY(8px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+
+@media(max-width:500px){
+  .app{padding:2rem 1rem 4rem}
+  .hero h1{font-size:26px}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:1rem}
+  .letter-content{padding:1.5rem 1.25rem 1.25rem}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef,useCallback}=React;
+
+/* ── SVG FLOWER COMPONENTS ── */
+function Rose({size=60}){
+  return(
+    <svg width={size} height={size} viewBox="0 0 60 60">
+      <line x1="30" y1="42" x2="30" y2="59" stroke="#5a8a4a" strokeWidth="2" strokeLinecap="round"/>
+      <path d="M30 52 Q24 46 20 48" fill="none" stroke="#5a8a4a" strokeWidth="1.5" strokeLinecap="round"/>
+      <ellipse cx="20.5" cy="48.5" rx="5" ry="2.5" fill="#6aa058" transform="rotate(-30,20.5,48.5)"/>
+      {[0,60,120,180,240,300].map((a,i)=>(
+        <ellipse key={i} cx={30+Math.cos(a*Math.PI/180)*10} cy={28+Math.sin(a*Math.PI/180)*10}
+          rx="7" ry="5" fill="#d4607a" opacity=".82"
+          transform={`rotate(${a},${30+Math.cos(a*Math.PI/180)*10},${28+Math.sin(a*Math.PI/180)*10})`}/>
+      ))}
+      {[30,90,150,210,270,330].map((a,i)=>(
+        <ellipse key={i} cx={30+Math.cos(a*Math.PI/180)*5.5} cy={28+Math.sin(a*Math.PI/180)*5.5}
+          rx="5.5" ry="4" fill="#c0496a" opacity=".9"
+          transform={`rotate(${a},${30+Math.cos(a*Math.PI/180)*5.5},${28+Math.sin(a*Math.PI/180)*5.5})`}/>
+      ))}
+      <circle cx="30" cy="28" r="5" fill="#a8304a"/>
+      <circle cx="30" cy="28" r="2.5" fill="#c04060" opacity=".7"/>
+    </svg>
+  );
+}
+
+function Sunflower({size=60}){
+  const petals=12;
+  return(
+    <svg width={size} height={size} viewBox="0 0 60 60">
+      <line x1="30" y1="42" x2="30" y2="59" stroke="#5a8a4a" strokeWidth="2.2" strokeLinecap="round"/>
+      <path d="M30 50 Q36 44 40 46" fill="none" stroke="#5a8a4a" strokeWidth="1.5" strokeLinecap="round"/>
+      <ellipse cx="39.5" cy="46.5" rx="5" ry="2.5" fill="#6aa058" transform="rotate(30,39.5,46.5)"/>
+      {Array.from({length:petals},(_,i)=>{
+        const a=(i*360/petals)*Math.PI/180;
+        const x=30+Math.cos(a)*12.5,y=27+Math.sin(a)*12.5;
+        return <ellipse key={i} cx={x} cy={y} rx="5" ry="3" fill="#e8a020"
+          transform={`rotate(${i*360/petals},${x},${y})`} opacity=".9"/>
+      })}
+      {Array.from({length:petals},(_,i)=>{
+        const a=((i*360/petals)+(360/petals/2))*Math.PI/180;
+        const x=30+Math.cos(a)*9,y=27+Math.sin(a)*9;
+        return <ellipse key={i} cx={x} cy={y} rx="3.5" ry="2.5" fill="#d08010"
+          transform={`rotate(${i*360/petals+15},${x},${y})`} opacity=".8"/>
+      })}
+      <circle cx="30" cy="27" r="8" fill="#5a3010"/>
+      <circle cx="30" cy="27" r="6" fill="#6a3818"/>
+      {[0,45,90,135,180,225,270,315].map((a,i)=>(
+        <circle key={i} cx={30+Math.cos(a*Math.PI/180)*3.5} cy={27+Math.sin(a*Math.PI/180)*3.5} r="1.2" fill="#3a2008" opacity=".7"/>
+      ))}
+      <circle cx="30" cy="27" r="1.5" fill="#2a1804"/>
+    </svg>
+  );
+}
+
+function Gerbera({size=60}){
+  const n=14;
+  return(
+    <svg width={size} height={size} viewBox="0 0 60 60">
+      <line x1="30" y1="43" x2="30" y2="59" stroke="#5a8a4a" strokeWidth="2" strokeLinecap="round"/>
+      {Array.from({length:n},(_,i)=>{
+        const a=(i*360/n)*Math.PI/180;
+        const x=30+Math.cos(a)*13,y=27+Math.sin(a)*13;
+        return <ellipse key={i} cx={x} cy={y} rx="5.5" ry="2.8" fill="#e85a38"
+          transform={`rotate(${i*360/n},${x},${y})`} opacity=".88"/>
+      })}
+      {Array.from({length:n},(_,i)=>{
+        const a=((i*360/n)+(360/n/2))*Math.PI/180;
+        const x=30+Math.cos(a)*8.5,y=27+Math.sin(a)*8.5;
+        return <ellipse key={i} cx={x} cy={y} rx="4" ry="2.2" fill="#c04828"
+          transform={`rotate(${i*360/n+12.8},${x},${y})`} opacity=".9"/>
+      })}
+      <circle cx="30" cy="27" r="6" fill="#2a1804"/>
+      <circle cx="30" cy="27" r="4.5" fill="#3a2810"/>
+      {Array.from({length:8},(_,i)=>{
+        const a=(i*45)*Math.PI/180;
+        return <circle key={i} cx={30+Math.cos(a)*2.5} cy={27+Math.sin(a)*2.5} r=".9" fill="#e8c080" opacity=".8"/>
+      })}
+      <circle cx="30" cy="27" r="1.5" fill="#e8d090"/>
+    </svg>
+  );
+}
+
+const FLOWER_COMPS={rose:Rose,sunflower:Sunflower,gerbera:Gerbera};
+
+/* ── BOUQUET SVG ── */
+function BouquetSVG({bouquet,small=false,animate=false}){
+  if(!bouquet||!bouquet.length) return null;
+  const w=small?80:210,h=small?80:200;
+  const flowers=[];
+  bouquet.forEach(f=>{for(let i=0;i<f.qty;i++) flowers.push(f.type);});
+  const total=flowers.length;
+  const fs=small?18:(total<=3?58:total<=5?50:44);
+  return(
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{overflow:'visible'}}>
+      {!small&&(
+        <>
+          <ellipse cx={w/2} cy={h-18} rx="22" ry="6" fill="#e8c4b8" opacity=".7"/>
+          <path d={`M${w/2-22} ${h-18} Q${w/2} ${h-32} ${w/2+22} ${h-18}`} fill="none" stroke="#d4a090" strokeWidth="1.5"/>
+          <ellipse cx={w/2} cy={h-22} rx="9" ry="5.5" fill="#d4a090" opacity=".9"/>
+          <path d={`M${w/2} ${h-22} Q${w/2-14} ${h-34} ${w/2-22} ${h-30}`} fill="#e8c4b8" opacity=".85"/>
+          <path d={`M${w/2} ${h-22} Q${w/2+14} ${h-34} ${w/2+22} ${h-30}`} fill="#e8c4b8" opacity=".85"/>
+        </>
+      )}
+      {flowers.map((type,i)=>{
+        const Comp=FLOWER_COMPS[type]||Rose;
+        const spread=total===1?0:(i/(total-1)-0.5);
+        const px=small?2:((w/2)+spread*(w*0.6))-(fs/2);
+        const py=small?0:(h-fs-(i%2===0?8:0)-36);
+        const style=animate?{animation:`bloomIn .55s ${i*0.12+0.05}s cubic-bezier(.34,1.5,.64,1) both`,transformOrigin:`${px+fs/2}px ${py+fs}px`}:{};
+        return(
+          <g key={i} transform={`translate(${px},${py})`} style={style}>
+            <Comp size={fs}/>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+/* ── DATA & CONSTANTS ── */
+const COLORS=[
+  {key:'pink',bg:'bg-pink',fg:'c-pink',hex:'#e8a0b0'},
+  {key:'amber',bg:'bg-amber',fg:'c-amber',hex:'#c8955a'},
+  {key:'teal',bg:'bg-teal',fg:'c-teal',hex:'#5ab090'},
+  {key:'blue',bg:'bg-blue',fg:'c-blue',hex:'#7aaace'},
+  {key:'purple',bg:'bg-purple',fg:'c-purple',hex:'#9a8adc'},
+  {key:'rose',bg:'bg-rose',fg:'c-rose',hex:'#cc8090'},
+];
+
+const FLOWER_META={
+  rose:{label:'Rose',hint:'Symbol of love',color:'#d4607a'},
+  sunflower:{label:'Sunflower',hint:'Joy & warmth',color:'#e8a020'},
+  gerbera:{label:'Gerbera Daisy',hint:'Playful & bright',color:'#e85a38'},
+};
+
+// ── EDIT THIS ARRAY TO CUSTOMIZE YOUR LETTERS ──
+// Each letter: { id, title, color, body, signed, media, locked, bouquet }
+// color: 'pink' | 'amber' | 'teal' | 'blue' | 'purple' | 'rose'
+// media: null | { type: 'photo' | 'song', name: 'string' }
+// bouquet: null | [{ type: 'rose'|'sunflower'|'gerbera', qty: number }]
+const DEFAULT_LETTERS=[
+  {id:1,title:"Open when you miss me",color:"pink",body:"Hey you,\n\nIf you're reading this, it means I'm not right there beside you — and I know that's hard. But I want you to know that no matter the distance, my thoughts find their way to you every single day.\n\nClose your eyes for a second. Remember that afternoon we laughed until it hurt? That warmth you feel right now — that's real, and it's not going anywhere.\n\nI miss you too. But we've got this.",media:{type:"photo",name:"Us at the beach, August 2024.jpg"},signed:"With all my love,",locked:false,bouquet:[{type:'rose',qty:2},{type:'gerbera',qty:1}]},
+  {id:2,title:"Open when you are stressed",color:"teal",body:"Breathe. Just breathe.\n\nI know everything feels heavy right now. But here's what I need you to hear: you have handled hard things before, and you came out the other side.\n\nPut on something cozy. Make a warm drink. Set a 10-minute timer and just rest — guilt free. The world can wait.\n\nYou are more capable than the anxiety is telling you. I believe in you completely.",media:{type:"song",name:"\"Breathe (2 AM)\" — Anna Nalick"},signed:"Rooting for you always,",locked:false,bouquet:null},
+  {id:3,title:"Open when you need a laugh",color:"amber",body:"Okay, I need you to picture this:\n\nA golden retriever puppy, wearing tiny sunglasses, absolutely convinced it has caught its own tail. That is you, sometimes, running after things that were part of you all along.\n\nLife is genuinely a little ridiculous. Lean into that. You're allowed to find it funny.",media:{type:"photo",name:"That ridiculous photo of us.jpg"},signed:"Your biggest fan,",locked:false,bouquet:[{type:'sunflower',qty:3}]},
+  {id:4,title:"Open when you feel lonely",color:"blue",body:"I'm here.\n\nNot physically, maybe. But in every song we've shared, every inside joke that still makes you smile — I'm woven into your days.\n\nYou are seen. You are loved by more people than you know. You are never really alone.",media:{type:"song",name:"Our playlist"},signed:"Forever in your corner,",locked:false,bouquet:null},
+  {id:5,title:"Open when you need to hear I'm proud of you",color:"purple",body:"I am so, so proud of you.\n\nNot just for the big things. But for the quiet bravery of ordinary days. For getting up when it was hard. For being kind when you were tired.\n\nWho you are is already more than enough.\n\nI am proud of you. Full stop.",media:null,signed:"With immense pride and love,",locked:false,bouquet:null},
+  {id:6,title:"Open when it's your birthday",color:"rose",body:"Happy birthday, you wonderful human.\n\nToday the whole world is a little better because you're in it. Make a wish. Eat the cake. Do the thing that makes you feel most like yourself.\n\nHere's to another year of you.",media:null,signed:"Celebrating you always,",locked:true,bouquet:null},
+];
+
+function load(){
+  try{const d=localStorage.getItem('openwhen_v2');return d?JSON.parse(d):[...DEFAULT_LETTERS];}catch{return[...DEFAULT_LETTERS];}
+}
+function loadName(){return localStorage.getItem('openwhen_name')||'';}
+
+/* ── ICONS ── */
+const LockIcon=()=>(
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9a8880" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+  </svg>
+);
+const PhotoIcon=()=>(
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+    <rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>
+  </svg>
+);
+const SongIcon=()=>(
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+    <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+  </svg>
+);
+
+/* ── APP ── */
+function App(){
+  const [letters,setLetters]=useState(load);
+  const [recipient,setRecipient]=useState(loadName);
+  const [flowers,setFlowers]=useState({rose:0,sunflower:0,gerbera:0});
+  const [pinMode,setPinMode]=useState(false);
+  const [openL,setOpenL]=useState(null);
+  const [bloomed,setBloomed]=useState(false);
+  const [showAdd,setShowAdd]=useState(false);
+  const [showName,setShowName]=useState(false);
+  const [nameInput,setNameInput]=useState('');
+  const [editIdx,setEditIdx]=useState(-1);
+  const [form,setForm]=useState({title:'',body:'',signed:'',mediaName:'',color:'pink',locked:false});
+  const [fColor,setFColor]=useState('pink');
+  const [fLocked,setFLocked]=useState(false);
+
+  const save=useCallback((ls)=>{try{localStorage.setItem('openwhen_v2',JSON.stringify(ls));}catch{}},[]);
+  const upd=(ls)=>{setLetters(ls);save(ls);}
+
+  const total=Object.values(flowers).reduce((a,b)=>a+b,0);
+  const bouquet=Object.entries(flowers).filter(([,q])=>q>0).map(([type,qty])=>({type,qty}));
+  const getC=k=>COLORS.find(c=>c.key===k)||COLORS[0];
+
+  function adj(type,d){setFlowers(p=>({...p,[type]:Math.max(0,Math.min(5,p[type]+d))}));}
+
+  function attach(id){
+    if(!total) return;
+    const ls=letters.map(l=>l.id===id?{...l,bouquet:[...bouquet]}:l);
+    upd(ls); setPinMode(false); setFlowers({rose:0,sunflower:0,gerbera:0});
+  }
+
+  function envClick(l){
+    if(pinMode){if(!l.locked) attach(l.id);return;}
+    if(l.locked){alert('This envelope is sealed. 🔒');return;}
+    setOpenL(l);setBloomed(false);setTimeout(()=>setBloomed(true),80);
+  }
+
+  function openAddModal(idx=-1){
+    setEditIdx(idx);
+    if(idx>=0){
+      const l=letters[idx];
+      setForm({title:l.title,body:l.body,signed:l.signed||'',mediaName:l.media?l.media.name:'',color:l.color,locked:l.locked});
+      setFColor(l.color);setFLocked(l.locked);
+    } else {
+      setForm({title:'',body:'',signed:'',mediaName:'',color:'pink',locked:false});
+      setFColor('pink');setFLocked(false);
+    }
+    setShowAdd(true);
+  }
+
+  function saveForm(){
+    if(!form.title.trim()||!form.body.trim()) return;
+    const mRaw=form.mediaName.trim();
+    const isImg=/\.(jpg|jpeg|png|gif|webp|avif)$/i.test(mRaw);
+    const letter={
+      id:editIdx>=0?letters[editIdx].id:Date.now(),
+      title:form.title,color:fColor,body:form.body,
+      signed:form.signed||'With love,',
+      media:mRaw?{type:isImg?'photo':'song',name:mRaw}:null,
+      locked:fLocked,
+      bouquet:editIdx>=0?letters[editIdx].bouquet:null
+    };
+    const ls=editIdx>=0?letters.map((l,i)=>i===editIdx?letter:l):[...letters,letter];
+    upd(ls);setShowAdd(false);
+  }
+
+  function del(){
+    if(editIdx<0||!confirm('Delete this letter?')) return;
+    const ls=letters.filter((_,i)=>i!==editIdx);
+    upd(ls);setShowAdd(false);
+  }
+
+  function removeBouquet(id){
+    const ls=letters.map(l=>l.id===id?{...l,bouquet:null}:l);
+    upd(ls);
+  }
+
+  function saveName(){
+    const v=nameInput.trim();setRecipient(v);
+    try{v?localStorage.setItem('openwhen_name',v):localStorage.removeItem('openwhen_name');}catch{}
+    setShowName(false);
+  }
+
+  useEffect(()=>{
+    const h=e=>{if(e.key==='Escape'){setOpenL(null);setShowAdd(false);setShowName(false);setPinMode(false);}};
+    window.addEventListener('keydown',h);return()=>window.removeEventListener('keydown',h);
+  },[]);
+
+  return(
+    <div className="app">
+      {/* Hero */}
+      <div className="hero">
+        <div className="hero-badge" onClick={()=>{setNameInput(recipient);setShowName(true)}}>
+          {recipient?`For ${recipient}`:'For someone special'}
+        </div>
+        <h1>Open when&hellip;</h1>
+        <p>Letters &amp; blooms, written just for you.<br/>Open one whenever you need it most.</p>
+        <div className="hero-actions">
+          <button className="btn btn-outline" onClick={()=>{setNameInput(recipient);setShowName(true)}}>Edit recipient</button>
+          <button className="btn btn-primary" onClick={()=>openAddModal()}>+ Add letter</button>
+        </div>
+      </div>
+
+      {/* Bouquet Builder */}
+      <div className="builder-panel">
+        <div className="section-label">Bouquet Builder</div>
+        <div className="builder-inner">
+          <div className="flower-palette">
+            {Object.entries(FLOWER_META).map(([key,f])=>{
+              const Comp=FLOWER_COMPS[key];
+              const qty=flowers[key];
+              return(
+                <div key={key} className={`flower-option ${qty>0?'has-qty':''}`} style={qty>0?{borderColor:f.color}:{}}>
+                  <Comp size={46}/>
+                  <div style={{flex:1}}>
+                    <div className="flower-name" style={{color:f.color}}>{f.label}</div>
+                    <div className="flower-hint">{f.hint}</div>
+                  </div>
+                  <div className="qty-row">
+                    <button className="qty-btn" onClick={()=>adj(key,-1)}>−</button>
+                    <span className="qty-num">{qty}</span>
+                    <button className="qty-btn" onClick={()=>adj(key,1)}>+</button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="bouquet-preview-area">
+            {total>0?(
+              <>
+                <div className="bouquet-canvas">
+                  <BouquetSVG bouquet={bouquet} small={false} animate={false}/>
+                </div>
+                <div className="bouquet-actions">
+                  {!pinMode
+                    ?<button className="btn-bloom" onClick={()=>setPinMode(true)}>📌 Pin to envelope</button>
+                    :<button className="btn btn-outline" onClick={()=>setPinMode(false)}>Cancel</button>}
+                  <button className="btn btn-outline" onClick={()=>setFlowers({rose:0,sunflower:0,gerbera:0})}>Clear</button>
+                </div>
+                {pinMode&&<div className="pin-hint">Click any unlocked envelope to attach this bouquet</div>}
+              </>
+            ):(
+              <div className="bouquet-empty">
+                <div style={{fontSize:36,marginBottom:10}}>🌸</div>
+                <div>Use the + buttons to add flowers<br/>then pin your bouquet to an envelope</div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Grid */}
+      <div className="section-label">Your letters</div>
+      <div className="grid">
+        {letters.map((l,idx)=>{
+          const c=getC(l.color);
+          const hb=l.bouquet&&l.bouquet.length>0;
+          return(
+            <div key={l.id}
+              className={`env-card ${c.bg} ${l.locked?'locked':''} ${pinMode&&!l.locked?'pin-target':''} ${hb&&!l.locked?'has-bouquet':''}`}
+              onClick={()=>envClick(l)}>
+              {l.locked&&<div className="lock-icon"><LockIcon/></div>}
+              {hb&&!l.locked&&(
+                <div className="bouquet-badge">
+                  <BouquetSVG bouquet={l.bouquet} small={true}/>
+                </div>
+              )}
+              <div className={`env-icon ${c.fg}`}>
+                <div className="env-body"/>
+                <div className="env-flap"/>
+                <div className="env-vl"/>
+                <div className="env-vr"/>
+              </div>
+              <div className="env-label">{l.title}</div>
+              <div className={`env-dot ${c.fg}`}/>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Letter Modal */}
+      {openL&&(
+        <div className="overlay" onClick={e=>{if(e.target===e.currentTarget)setOpenL(null)}}>
+          <div className="letter-modal">
+            <button className="modal-close" onClick={()=>setOpenL(null)}>Close</button>
+            {openL.bouquet&&openL.bouquet.length>0&&(
+              <div className={`bouquet-reveal ${bloomed?'bloomed':''}`}>
+                <BouquetSVG bouquet={openL.bouquet} small={false} animate={bloomed}/>
+              </div>
+            )}
+            <div className="letter-content">
+              <div className="modal-tag">A letter for you</div>
+              <div className="modal-title">{openL.title}</div>
+              <div className="divider"/>
+              {recipient&&<div className="letter-salutation">Dear {recipient},</div>}
+              <div className="letter-body">{openL.body}</div>
+              <div className="letter-sign">{openL.signed||'With love,'}  ✦</div>
+              {openL.media&&(
+                <div className="media-box">
+                  <div style={{color:getC(openL.color).hex}}>
+                    {openL.media.type==='photo'?<PhotoIcon/>:<SongIcon/>}
+                  </div>
+                  <div>
+                    <div className="media-kind">{openL.media.type==='photo'?'Attached photo':'Song for you'}</div>
+                    <div className="media-name">{openL.media.name}</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add/Edit Modal */}
+      {showAdd&&(
+        <div className="overlay" onClick={e=>{if(e.target===e.currentTarget)setShowAdd(false)}}>
+          <div className="add-modal">
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.25rem'}}>
+              <div style={{fontFamily:"'Playfair Display',serif",fontSize:20,fontWeight:400}}>
+                {editIdx>=0?'Edit letter':'Add a new letter'}
+              </div>
+              <button className="modal-close" style={{position:'static'}} onClick={()=>setShowAdd(false)}>Cancel</button>
+            </div>
+            <div className="form-group-stack">
+              <div>
+                <label className="form-label">Title (shown on envelope)</label>
+                <input className="form-input" placeholder="e.g. Open when you need courage"
+                  value={form.title} onChange={e=>setForm(p=>({...p,title:e.target.value}))}/>
+              </div>
+              <div>
+                <label className="form-label">Letter body</label>
+                <textarea className="form-input form-textarea" placeholder="Write your letter here..."
+                  value={form.body} onChange={e=>setForm(p=>({...p,body:e.target.value}))}/>
+              </div>
+              <div>
+                <label className="form-label">Closing line</label>
+                <input className="form-input" placeholder="e.g. With all my love,"
+                  value={form.signed} onChange={e=>setForm(p=>({...p,signed:e.target.value}))}/>
+              </div>
+              <div>
+                <label className="form-label">Media attachment (optional)</label>
+                <input className="form-input" placeholder="Photo filename or song title"
+                  value={form.mediaName} onChange={e=>setForm(p=>({...p,mediaName:e.target.value}))}/>
+              </div>
+              <div>
+                <label className="form-label">Envelope color</label>
+                <div className="color-picker">
+                  {COLORS.map(c=>(
+                    <div key={c.key} className={`color-dot ${fColor===c.key?'active':''}`}
+                      style={{background:c.hex}} onClick={()=>setFColor(c.key)}/>
+                  ))}
+                </div>
+              </div>
+              <div className="lock-row">
+                <div className={`toggle ${fLocked?'on':''}`} onClick={()=>setFLocked(p=>!p)}>
+                  <div className="toggle-thumb"/>
+                </div>
+                <div>
+                  <div style={{fontSize:14,color:'var(--ink)'}}>Lock envelope</div>
+                  <div style={{fontSize:12,color:'var(--muted)',marginTop:2}}>Locked envelopes can't be opened until unlocked</div>
+                </div>
+              </div>
+              <div style={{display:'flex',gap:10,justifyContent:'flex-end',marginTop:4}}>
+                {editIdx>=0&&<button className="btn-danger" onClick={del}>Delete</button>}
+                <button className="btn-bloom" onClick={saveForm}>Save letter</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Name Modal */}
+      {showName&&(
+        <div className="overlay" onClick={e=>{if(e.target===e.currentTarget)setShowName(false)}}>
+          <div className="name-modal-inner">
+            <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:22,fontWeight:400,marginBottom:8}}>Who are these for?</h2>
+            <p style={{fontSize:14,color:'var(--muted)',marginBottom:'1.5rem',lineHeight:1.6}}>Enter your loved one's name to personalize the letters.</p>
+            <input className="form-input" placeholder="e.g. Sarah, My love, My dearest..."
+              value={nameInput} onChange={e=>setNameInput(e.target.value)}
+              style={{textAlign:'center',marginBottom:'1.25rem'}}
+              onKeyDown={e=>e.key==='Enter'&&saveName()}/>
+            <div style={{display:'flex',gap:10,justifyContent:'center'}}>
+              <button className="btn btn-outline" onClick={()=>setShowName(false)}>Cancel</button>
+              <button className="btn-bloom" onClick={saveName}>Save name</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
